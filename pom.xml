@@ -68,7 +68,7 @@
 				<executions>
 					<execution>
 						<id>install-any23</id>
-						<phase>install</phase>
+						<phase>initialize</phase>
 						<goals>
 							<goal>install-file</goal>
 						</goals>
