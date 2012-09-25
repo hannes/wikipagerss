@@ -8,9 +8,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.any23.Any23;
-import org.apache.any23.configuration.DefaultConfiguration;
-import org.apache.any23.extractor.ExtractionParameters;
-import org.apache.any23.extractor.ExtractionParameters.ValidationMode;
 import org.apache.any23.extractor.ExtractorFactory;
 import org.apache.any23.extractor.ExtractorGroup;
 import org.apache.any23.extractor.html.HCalendarExtractor;
@@ -55,7 +52,7 @@ public class WikiPage {
 				+ File.separator + url.hashCode() + ".wsrtriplecache");
 	}
 
-	public Collection<Statement> getTriples() {
+	private Collection<Statement> getTriples() {
 		if (isCacheInvalid()) {
 			log.debug("Refreshing cache for " + show);
 			retrieve();
@@ -63,6 +60,10 @@ public class WikiPage {
 			log.debug("Using cached triples for " + show + " from " + cacheFile);
 		}
 		return loadTriples();
+
+	}
+
+	public Collection<Episode> getEpisodes() {
 
 	}
 

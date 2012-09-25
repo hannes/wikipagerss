@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -30,10 +29,7 @@ import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.sail.memory.MemoryStore;
 
-import com.sun.syndication.feed.synd.SyndContent;
-import com.sun.syndication.feed.synd.SyndContentImpl;
 import com.sun.syndication.feed.synd.SyndEntry;
-import com.sun.syndication.feed.synd.SyndEntryImpl;
 import com.sun.syndication.feed.synd.SyndFeed;
 import com.sun.syndication.feed.synd.SyndFeedImpl;
 import com.sun.syndication.io.SyndFeedOutput;
@@ -44,23 +40,6 @@ public class WikiShowRSS {
 	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
 	private static final int CACHE_SEC = 21600; // cache for 12 hours
-
-	public static class Episode {
-		protected String name;
-		protected Date date;
-		protected String show;
-
-		public Episode(String show, String name, Date date) {
-			this.name = name;
-			this.show = show;
-			this.date = date;
-		}
-
-		@Override
-		public String toString() {
-			return name + " from " + show + " at " + date;
-		}
-	}
 
 	public static class ICALTZD {
 		public static final String PREFIX = "http://www.w3.org/2002/12/cal/icaltzd#";
@@ -142,29 +121,7 @@ public class WikiShowRSS {
 			List<Episode> eps = rss.getAllAndSort(shows);
 
 			for (Episode e : eps) {
-				SyndEntry entry;
-				SyndContent description;
-
-				String google = "http://www.google.com/search?q="
-						+ URLEncoder.encode(e.name + " " + e.show, "UTF-8");
-
-				String isohunt = "http://isohunt.com/torrents/?ihq="
-						+ URLEncoder.encode(e.name + " " + e.show, "UTF-8");
-
-				String text = e.show + " episode: " + e.name;
-
-				entry = new SyndEntryImpl();
-				entry.setTitle(text);
-				entry.setLink(google);
-				entry.setPublishedDate(e.date);
-				description = new SyndContentImpl();
-				description.setType("text/html");
-				description.setValue("<p>" + text + " (<a href='" + google
-						+ "'>Google</a>, <a href='" + isohunt
-						+ "'>isoHunt</a>)</p>");
-
-				entry.setDescription(description);
-				entries.add(entry);
+				entries.add(e.toFeedEntry());
 			}
 
 			feed.setEntries(entries);
@@ -202,6 +159,8 @@ public class WikiShowRSS {
 		while (res.hasNext()) {
 			BindingSet bs = res.next();
 			String name = bs.getBinding("name").getValue().stringValue();
+			
+			// filter out some ugly stuff
 			name = name.replaceAll("\\[\\d+\\]", "");
 			name = name.replaceAll("\"", "");
 			name = name.replaceAll("\n", " / ");
@@ -209,7 +168,7 @@ public class WikiShowRSS {
 			Date date = dateFormat.parse(bs.getBinding("date").getValue()
 					.stringValue());
 
-			// filter out future stuff
+			// filter out future events (cant watch!)
 			if (date.after(Calendar.getInstance().getTime())) {
 				continue;
 			}
